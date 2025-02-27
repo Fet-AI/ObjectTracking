@@ -194,6 +194,8 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\Users\PSK\Downloads\TrackingDataModel.h" />
+    <ClInclude Include="..\..\..\..\..\Users\PSK\Downloads\TrackingViewModel.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="ImageLibrary.h" />
     <ClInclude Include="ObjectTracking.h" />

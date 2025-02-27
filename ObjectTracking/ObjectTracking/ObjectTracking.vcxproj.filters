@@ -13,8 +13,14 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Dialog">
+    <Filter Include="View">
       <UniqueIdentifier>{d25ac9ef-2423-4e7c-aed5-b56433f80db2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Model">
+      <UniqueIdentifier>{db4b221f-d1d2-4022-8c58-ec4dc61df826}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ViewModel">
+      <UniqueIdentifier>{f183ef2d-ba36-4c69-914d-2de24e9b33d9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -34,10 +40,16 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ObjectTrackingDlg.h">
-      <Filter>Dialog</Filter>
+      <Filter>View</Filter>
     </ClInclude>
     <ClInclude Include="ImageLibrary.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Users\PSK\Downloads\TrackingViewModel.h">
+      <Filter>ViewModel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Users\PSK\Downloads\TrackingDataModel.h">
+      <Filter>Model</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -48,7 +60,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ObjectTrackingDlg.cpp">
-      <Filter>Dialog</Filter>
+      <Filter>View</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
