@@ -194,15 +194,15 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\Users\PSK\Downloads\TrackingDataModel.h" />
-    <ClInclude Include="..\..\..\..\..\Users\PSK\Downloads\TrackingViewModel.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="ImageLibrary.h" />
+    <ClInclude Include="Model\TrackingDataModel.h" />
     <ClInclude Include="ObjectTracking.h" />
     <ClInclude Include="ObjectTrackingDlg.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="ViewModel\TrackingViewModel.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ObjectTracking.cpp" />
@@ -213,6 +213,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="ViewModel\TrackingViewModel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ObjectTracking.rc" />

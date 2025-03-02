@@ -1,6 +1,6 @@
 #pragma once
 #include "ImageLibrary.h"
-#include "./ViewModel/TrackingViewModel.h"
+#include "./ViewModel/TrackingViewModel.h" // ViewModel 추가
 
 // CObjectTrackingDlg dialog
 class CObjectTrackingDlg : public CDialogEx
@@ -19,8 +19,8 @@ protected:
 
 public:
     HICON m_hIcon{};
-    BITMAPINFO* m_pBitmapInfo{};
-    std::shared_ptr<TrackingViewModel> viewModel; // ViewModel을 스마트 포인터로 변경
+    BITMAP m_pBitmapInfo{};
+    TrackingViewModel viewModel; // ViewModel 추가
     CImage m_image{};
 
     void CreateBitmapInfo(int nWidth, int nHeight, int nBpp); // Bitmap 정보를 생성하는 함수.

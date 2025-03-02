@@ -45,11 +45,11 @@
     <ClInclude Include="ImageLibrary.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\Users\PSK\Downloads\TrackingViewModel.h">
-      <Filter>ViewModel</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\Users\PSK\Downloads\TrackingDataModel.h">
+    <ClInclude Include="Model\TrackingDataModel.h">
       <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="ViewModel\TrackingViewModel.h">
+      <Filter>ViewModel</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -61,6 +61,9 @@
     </ClCompile>
     <ClCompile Include="ObjectTrackingDlg.cpp">
       <Filter>View</Filter>
+    </ClCompile>
+    <ClCompile Include="ViewModel\TrackingViewModel.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
