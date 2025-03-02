@@ -1,4 +1,5 @@
-ï»¿// ObjectTrackingDlg.cpp : implementation file
+
+// ObjectTrackingDlg.cpp : implementation file
 //
 
 #include "pch.h"
@@ -6,8 +7,7 @@
 #include "ObjectTracking.h"
 #include "ObjectTrackingDlg.h"
 #include "afxdialogex.h"
-
-// ë©”ëª¨ë¦¬ ëˆ„ìˆ˜ ì ê²€ í—¤ë”
+// ¸Ş¸ğ¸®´©¼ö Á¡°Ë Çì´õ
 #define _CRTDBG_MAP_ALLOC
 #include <cstdlib>
 #include <crtdbg.h>
@@ -16,187 +16,246 @@
 #define new DEBUG_NEW
 #endif
 
+
 // CAboutDlg dialog used for App About
+
 class CAboutDlg : public CDialogEx
 {
 public:
-    CAboutDlg();
+	CAboutDlg();
 
+// Dialog Data
 #ifdef AFX_DESIGN_TIME
-    enum { IDD = IDD_ABOUTBOX };
+	enum { IDD = IDD_ABOUTBOX };
 #endif
 
+	protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+
+// Implementation
 protected:
-    virtual void DoDataExchange(CDataExchange* pDX);
-    DECLARE_MESSAGE_MAP()
+	DECLARE_MESSAGE_MAP()
 };
 
-CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX) {}
+CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
+{
+}
 
 void CAboutDlg::DoDataExchange(CDataExchange* pDX)
 {
-    CDialogEx::DoDataExchange(pDX);
+	CDialogEx::DoDataExchange(pDX);
 }
 
 BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
 
+
 // CObjectTrackingDlg dialog
 
+
+
 CObjectTrackingDlg::CObjectTrackingDlg(CWnd* pParent /*=nullptr*/)
-    : CDialogEx(IDD_OBJECTTRACKING_DIALOG, pParent)
+	: CDialogEx(IDD_OBJECTTRACKING_DIALOG, pParent)
 {
-    m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
 void CObjectTrackingDlg::DoDataExchange(CDataExchange* pDX)
 {
-    CDialogEx::DoDataExchange(pDX);
+	CDialogEx::DoDataExchange(pDX);
+}
+
+void CObjectTrackingDlg::CreateBitmapInfo(int nWidth, int nHeight, int nBpp)
+{
+	if (m_pBitmapInfo != nullptr)
+	{
+		delete[] reinterpret_cast<BYTE*>(m_pBitmapInfo);
+		m_pBitmapInfo = NULL;
+	}
+
+	if (nBpp == 8)
+		m_pBitmapInfo = (BITMAPINFO*) new BYTE[sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)];
+	else // 24 or 32bit
+		m_pBitmapInfo = (BITMAPINFO*) new BYTE[sizeof(BITMAPINFO)];
+
+	m_pBitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	m_pBitmapInfo->bmiHeader.biPlanes = 1;
+	m_pBitmapInfo->bmiHeader.biBitCount = nBpp;
+	m_pBitmapInfo->bmiHeader.biCompression = BI_RGB;
+	m_pBitmapInfo->bmiHeader.biSizeImage = 0;
+	m_pBitmapInfo->bmiHeader.biXPelsPerMeter = 0;
+	m_pBitmapInfo->bmiHeader.biYPelsPerMeter = 0;
+	m_pBitmapInfo->bmiHeader.biClrUsed = 0;
+	m_pBitmapInfo->bmiHeader.biClrImportant = 0;
+
+	if (nBpp == 8)
+	{
+		for (int i = 0; i < 256; i++)
+		{
+			m_pBitmapInfo->bmiColors[i].rgbBlue = (BYTE)i;
+			m_pBitmapInfo->bmiColors[i].rgbGreen = (BYTE)i;
+			m_pBitmapInfo->bmiColors[i].rgbRed = (BYTE)i;
+			m_pBitmapInfo->bmiColors[i].rgbReserved = 0;
+		}
+	}
+
+	m_pBitmapInfo->bmiHeader.biWidth = nWidth;
+	m_pBitmapInfo->bmiHeader.biHeight = -nHeight;
 }
 
 void CObjectTrackingDlg::DrawImage()
 {
-    CClientDC dc(GetDlgItem(IDC_PICTURE_VIEW));
+	CClientDC dc(GetDlgItem(IDC_PICTURE_VIEW));
 
-    CRect rect;
-    GetDlgItem(IDC_PICTURE_VIEW)->GetClientRect(&rect);
+	CRect rect;
+	GetDlgItem(IDC_PICTURE_VIEW)->GetClientRect(&rect);
 
-    const cv::Mat& matImage = viewModel.GetImage();
-    if (matImage.empty()) return;
-
-    // Bitmap ì •ë³´ ì—…ë°ì´íŠ¸
-    CreateBitmapInfo(matImage.cols, matImage.rows, matImage.channels() * 8);
-
-    SetStretchBltMode(dc.GetSafeHdc(), COLORONCOLOR);
-    StretchDIBits(dc.GetSafeHdc(), 0, 0, rect.Width(), rect.Height(), 0, 0,
-        matImage.cols, matImage.rows, matImage.data,
-        m_pBitmapInfo, DIB_RGB_COLORS, SRCCOPY);
+	SetStretchBltMode(dc.GetSafeHdc(), COLORONCOLOR);
+	StretchDIBits(dc.GetSafeHdc(), 0, 0, rect.Width(), rect.Height(), 0, 0, m_matImage.cols, m_matImage.rows, m_matImage.data, m_pBitmapInfo, DIB_RGB_COLORS, SRCCOPY);
 }
 
 BEGIN_MESSAGE_MAP(CObjectTrackingDlg, CDialogEx)
-    ON_WM_SYSCOMMAND()
-    ON_WM_PAINT()
-    ON_WM_QUERYDRAGICON()
-    ON_WM_GETMINMAXINFO()
-    ON_BN_CLICKED(IDC_BTN_IMG_LOAD, &CObjectTrackingDlg::OnBnClickedBtnImgLoad)
-    ON_BN_CLICKED(IDC_BTN_IMG_SAVE, &CObjectTrackingDlg::OnBnClickedBtnImgSave)
-    ON_WM_DESTROY()
+	ON_WM_SYSCOMMAND()
+	ON_WM_PAINT()
+	ON_WM_QUERYDRAGICON()
+	ON_WM_GETMINMAXINFO()
+	ON_BN_CLICKED(IDC_BTN_IMG_LOAD, &CObjectTrackingDlg::OnBnClickedBtnImgLoad)
+	ON_BN_CLICKED(IDC_BTN_IMG_SAVE, &CObjectTrackingDlg::OnBnClickedBtnImgSave)
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
+
+
+// CObjectTrackingDlg message handlers
 
 BOOL CObjectTrackingDlg::OnInitDialog()
 {
-    CDialogEx::OnInitDialog();
+	CDialogEx::OnInitDialog();
 
-    // ì‹œìŠ¤í…œ ë©”ë‰´ì— "About" ì¶”ê°€
-    CMenu* pSysMenu = GetSystemMenu(FALSE);
-    if (pSysMenu != nullptr)
-    {
-        CString strAboutMenu;
-        if (strAboutMenu.LoadString(IDS_ABOUTBOX))
-        {
-            pSysMenu->AppendMenu(MF_SEPARATOR);
-            pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
-        }
-    }
+	// Add "About..." menu item to system menu.
 
-    // ì•„ì´ì½˜ ì„¤ì •
-    SetIcon(m_hIcon, TRUE);
-    SetIcon(m_hIcon, FALSE);
+	// IDM_ABOUTBOX must be in the system command range.
+	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
+	ASSERT(IDM_ABOUTBOX < 0xF000);
 
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-    return TRUE;
+	CMenu* pSysMenu = GetSystemMenu(FALSE);
+	if (pSysMenu != nullptr)
+	{
+		BOOL bNameValid;
+		CString strAboutMenu;
+		bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
+		ASSERT(bNameValid);
+		if (!strAboutMenu.IsEmpty())
+		{
+			pSysMenu->AppendMenu(MF_SEPARATOR);
+			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
+		}
+	}
+
+	// Set the icon for this dialog.  The framework does this automatically
+	//  when the application's main window is not a dialog
+	SetIcon(m_hIcon, TRUE);			// Set big icon
+	SetIcon(m_hIcon, FALSE);		// Set small icon
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+
+	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
 void CObjectTrackingDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
-    if ((nID & 0xFFF0) == IDM_ABOUTBOX)
-    {
-        CAboutDlg dlgAbout;
-        dlgAbout.DoModal();
-    }
-    else
-    {
-        CDialogEx::OnSysCommand(nID, lParam);
-    }
+	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
+	{
+		CAboutDlg dlgAbout;
+		dlgAbout.DoModal();
+	}
+	else
+	{
+		CDialogEx::OnSysCommand(nID, lParam);
+	}
 }
+
+// If you add a minimize button to your dialog, you will need the code below
+//  to draw the icon.  For MFC applications using the document/view model,
+//  this is automatically done for you by the framework.
 
 void CObjectTrackingDlg::OnPaint()
 {
-    DrawImage();
-    CDialogEx::OnPaint();
+	DrawImage();
+	CDialogEx::OnPaint();	
 }
 
+// The system calls this function to obtain the cursor to display while the user drags
+//  the minimized window.
 HCURSOR CObjectTrackingDlg::OnQueryDragIcon()
 {
-    return static_cast<HCURSOR>(m_hIcon);
+	return static_cast<HCURSOR>(m_hIcon);
 }
+
+
 
 void CObjectTrackingDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 {
-    lpMMI->ptMinTrackSize = CPoint(1920, 1080);
-    CDialogEx::OnGetMinMaxInfo(lpMMI);
+	// TODO: Add your message handler code here and/or call default
+
+	lpMMI->ptMinTrackSize = CPoint(1920, 1080);
+	//lpMMI->ptMaxTrackSize = CPoint(1400, 1000);
+
+	CDialogEx::OnGetMinMaxInfo(lpMMI);
 }
 
-// ğŸ”¹ **ViewModelì„ í™œìš©í•œ ì´ë¯¸ì§€ ë¡œë“œ**
+
 void CObjectTrackingDlg::OnBnClickedBtnImgLoad()
 {
-    CFileDialog fileDlg(TRUE, NULL, NULL, OFN_READONLY,
-        _T("Image Files (*.jpg;*.bmp;*.png)|*.jpg;*.bmp;*.png|All Files (*.*)|*.*||"));
+	CFileDialog fileDlg(TRUE, NULL, NULL, OFN_READONLY, _T("image file(*.jpg;*.bmp;*.png;)|*.jpg;*.bmp;*.png;|All Files(*.*)|*.*||"));
+	if (fileDlg.DoModal() == IDOK)
+	{
+		CString path = fileDlg.GetPathName();
 
-    if (fileDlg.DoModal() == IDOK)
-    {
-        CString path = fileDlg.GetPathName();
-        std::string strPath(CT2CA(path));
+		CT2CA pszString(path);
+		std::string strPath(pszString);
 
-        if (viewModel.LoadImage(strPath))
-        {
-            DrawImage();
-        }
-        else
-        {
-            AfxMessageBox(_T("ì´ë¯¸ì§€ë¥¼ ë¶ˆëŸ¬ì˜¬ ìˆ˜ ì—†ìŠµë‹ˆë‹¤."));
-        }
-    }
+		m_matImage = cv::imread(strPath, cv::IMREAD_UNCHANGED);
+
+		CreateBitmapInfo(m_matImage.cols, m_matImage.rows, m_matImage.channels() * 8);
+
+		DrawImage();
+	}
 }
 
-// ğŸ”¹ **ViewModelì„ í™œìš©í•œ ì´ë¯¸ì§€ ì €ì¥**
 void CObjectTrackingDlg::OnBnClickedBtnImgSave()
 {
-    if (viewModel.GetImage().empty())
-    {
-        AfxMessageBox(_T("ì €ì¥í•  ì´ë¯¸ì§€ê°€ ì—†ìŠµë‹ˆë‹¤."));
-        return;
-    }
+	CFileDialog fileDlg(FALSE, _T("jpg"), NULL, OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST, _T("image file(*.jpg;*.bmp;*.png;)|*.jpg;*.bmp;*.png;|All Files(*.*)|*.*||"));
+	
+	if (m_matImage.empty())
+	{
+		AfxMessageBox(_T("ÀÌ¹ÌÁö¸¦ ¸øºÒ·¯¿ÔÁ®¿°"));
+		return;
+	}
 
-    CFileDialog fileDlg(FALSE, _T("jpg"), NULL,
-        OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST,
-        _T("Image Files (*.jpg;*.bmp;*.png)|*.jpg;*.bmp;*.png|All Files (*.*)|*.*||"));
+	if (fileDlg.DoModal() == IDOK) 
+	{
+		CString path = fileDlg.GetPathName();
+		CT2CA pszString(path);
+		std::string strPath(pszString);
 
-    if (fileDlg.DoModal() == IDOK)
-    {
-        CString path = fileDlg.GetPathName();
-        std::string strPath(CT2CA(path));
+		cv::imwrite(strPath, m_matImage);
+	}
 
-        if (viewModel.SaveImage(strPath))
-        {
-            AfxMessageBox(_T("ì´ë¯¸ì§€ë¥¼ ì €ì¥í–ˆìŠµë‹ˆë‹¤."));
-        }
-        else
-        {
-            AfxMessageBox(_T("ì´ë¯¸ì§€ë¥¼ ì €ì¥í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤."));
-        }
-    }
 }
 
-// ğŸ”¹ **ë©”ëª¨ë¦¬ í•´ì œ ë° ë¦¬ì†ŒìŠ¤ ì •ë¦¬**
 void CObjectTrackingDlg::OnDestroy()
 {
-    CDialogEx::OnDestroy();
+	// Á¾·á ¸Ş¼¼Áö
+	CDialogEx::OnDestroy();
 
-    // Bitmap ì •ë³´ í•´ì œ
-    if (m_pBitmapInfo != nullptr)
-    {
-        delete[] reinterpret_cast<BYTE*>(m_pBitmapInfo);
-        m_pBitmapInfo = nullptr;
-    }
+	//// ¸Ş¸ğ¸®´©¼ö ÇØ°á
+	
+	//1. Open CV´Â ÀÚµ¿À¸·Î ÇØÁ¦ °¡´ÉÇÔ.
+	//m_matImage.release();
+	 
+	//2. new·Î µ¿ÀûÇÒ´ç ÇÑ°ÍÀº ÇÁ·Î±×·¥ ³¡³¯¶§ µ¿ÀûÇÒ´ç ÇØÁ¦.
+	if (m_pBitmapInfo != nullptr)
+	{
+		delete[] reinterpret_cast<BYTE*>(m_pBitmapInfo);
+		m_pBitmapInfo = nullptr;
+	}
 }
