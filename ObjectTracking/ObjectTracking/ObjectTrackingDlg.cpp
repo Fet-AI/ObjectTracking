@@ -7,10 +7,6 @@
 #include "ObjectTracking.h"
 #include "ObjectTrackingDlg.h"
 #include "afxdialogex.h"
-// 메모리누수 점검 헤더
-#define _CRTDBG_MAP_ALLOC
-#include <cstdlib>
-#include <crtdbg.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -205,41 +201,57 @@ void CObjectTrackingDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 
 void CObjectTrackingDlg::OnBnClickedBtnImgLoad()
 {
-	CFileDialog fileDlg(TRUE, NULL, NULL, OFN_READONLY, _T("image file(*.jpg;*.bmp;*.png;)|*.jpg;*.bmp;*.png;|All Files(*.*)|*.*||"));
-	if (fileDlg.DoModal() == IDOK)
+	CFileDialog fileDlg(TRUE, NULL, NULL, OFN_READONLY,
+		_T("image file(*.jpg;*.bmp;*.png;)|*.jpg;*.bmp;*.png;|All Files(*.*)|*.*||"));
+
+	if (fileDlg.DoModal() == IDOK) 
 	{
 		CString path = fileDlg.GetPathName();
+		std::string strPath(CT2A(path, CP_UTF8));
 
-		CT2CA pszString(path);
-		std::string strPath(pszString);
-
-		m_matImage = cv::imread(strPath, cv::IMREAD_UNCHANGED);
-
-		CreateBitmapInfo(m_matImage.cols, m_matImage.rows, m_matImage.channels() * 8);
-
-		DrawImage();
+		std::string errorMsg;
+		if (m_viewModel.LoadImage(strPath, errorMsg)) 
+		{
+			cv::Mat image = m_viewModel.GetImage();
+			CreateBitmapInfo(image.cols, image.rows, image.channels() * 8);
+			DrawImage();
+			AfxMessageBox(_T("Image loaded successfully!"));
+		}
+		else 
+		{
+			CString errMsg(errorMsg.c_str());
+			AfxMessageBox(_T("Failed to load image!\n") + errMsg, MB_ICONERROR);
+		}
 	}
 }
 
 void CObjectTrackingDlg::OnBnClickedBtnImgSave()
 {
-	CFileDialog fileDlg(FALSE, _T("jpg"), NULL, OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST, _T("image file(*.jpg;*.bmp;*.png;)|*.jpg;*.bmp;*.png;|All Files(*.*)|*.*||"));
-	
-	if (m_matImage.empty())
+	if (m_viewModel.GetImage().empty()) 
 	{
-		AfxMessageBox(_T("이미지를 못불러왔져염"));
+		AfxMessageBox(_T("이미지를 불러오지 못했습니다."), MB_ICONERROR);
 		return;
 	}
+
+	CFileDialog fileDlg(FALSE, _T("jpg"), NULL, OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST,
+		_T("image file(*.jpg;*.bmp;*.png;)|*.jpg;*.bmp;*.png;|All Files(*.*)|*.*||"));
 
 	if (fileDlg.DoModal() == IDOK) 
 	{
 		CString path = fileDlg.GetPathName();
-		CT2CA pszString(path);
-		std::string strPath(pszString);
+		std::string strPath(CT2A(path, CP_UTF8));
 
-		cv::imwrite(strPath, m_matImage);
+		std::string errorMsg;
+		if (m_viewModel.SaveImage(strPath, errorMsg)) 
+		{
+			AfxMessageBox(_T("Image saved successfully!"));
+		}
+		else 
+		{
+			CString errMsg(errorMsg.c_str());
+			AfxMessageBox(_T("Failed to save image!\n") + errMsg, MB_ICONERROR);
+		}
 	}
-
 }
 
 void CObjectTrackingDlg::OnDestroy()

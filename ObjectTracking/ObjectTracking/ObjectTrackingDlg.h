@@ -4,6 +4,7 @@
 
 #pragma once
 #include "ImageLibrary.h"
+#include "ImageViewModel.h"
 
 // CObjectTrackingDlg dialog
 class CObjectTrackingDlg : public CDialogEx
@@ -24,6 +25,9 @@ public:
 	cv::Mat m_matImage{};
 	BITMAPINFO* m_pBitmapInfo{};
 	CImage m_image{};
+
+private:
+	CImageViewModel m_viewModel{};
 
 	
 	void CreateBitmapInfo(int nWidth, int nHeight, int nBpp); // Bitmap 정보를 생성하는 함수.

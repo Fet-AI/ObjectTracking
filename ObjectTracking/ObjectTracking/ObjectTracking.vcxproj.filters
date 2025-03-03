@@ -13,8 +13,14 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Dialog">
-      <UniqueIdentifier>{d25ac9ef-2423-4e7c-aed5-b56433f80db2}</UniqueIdentifier>
+    <Filter Include="View">
+      <UniqueIdentifier>{4baa38d8-22af-4a64-94ea-d90aa7107627}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ViewModel">
+      <UniqueIdentifier>{34ed8ebb-0b5d-4731-b25e-9b85df5a5f20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Model">
+      <UniqueIdentifier>{11ff56f8-0627-419b-a392-fdc915526a54}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -34,7 +40,16 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ObjectTrackingDlg.h">
-      <Filter>Dialog</Filter>
+      <Filter>View</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageModel.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageViewModel.h">
+      <Filter>ViewModel</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryLeak.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="ImageLibrary.h">
       <Filter>Source Files</Filter>
@@ -48,7 +63,13 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ObjectTrackingDlg.cpp">
-      <Filter>Dialog</Filter>
+      <Filter>View</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageModel.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageViewModel.cpp">
+      <Filter>ViewModel</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

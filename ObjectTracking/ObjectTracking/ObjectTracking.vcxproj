@@ -194,8 +194,11 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h" />
     <ClInclude Include="ImageLibrary.h" />
+    <ClInclude Include="ImageModel.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="ImageViewModel.h" />
+    <ClInclude Include="MemoryLeak.h" />
     <ClInclude Include="ObjectTracking.h" />
     <ClInclude Include="ObjectTrackingDlg.h" />
     <ClInclude Include="pch.h" />
@@ -203,6 +206,8 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ImageModel.cpp" />
+    <ClCompile Include="ImageViewModel.cpp" />
     <ClCompile Include="ObjectTracking.cpp" />
     <ClCompile Include="ObjectTrackingDlg.cpp" />
     <ClCompile Include="pch.cpp">
