@@ -1,57 +1,78 @@
-#include "ImageViewModel.h"
+ï»¿#include "ImageViewModel.h"
 
-// »ı¼ºÀÚ
+// ìƒì„±ì
 CImageViewModel::CImageViewModel() {}
 
-// Èæ¹é º¯È¯ (¿¹¿Ü Ã³¸® Ãß°¡)
-void CImageViewModel::ConvertToGray(std::string& errorMsg) 
+// ì´ë¯¸ì§€ ë¡œë“œ
+bool CImageViewModel::LoadImage(const std::string& filePath, std::string& errorMsg) 
 {
     try 
     {
-        auto image = std::const_pointer_cast<cv::Mat>(m_model.GetImage());
-        if (!image || image->empty()) 
+        cv::Mat image = cv::imread(filePath, cv::IMREAD_UNCHANGED);
+        if (image.empty()) 
         {
-            errorMsg = "Error: Image is empty or not loaded.";
-            return;
+            errorMsg = "Failed to load image: Empty or invalid file.";
+            return false;
         }
 
-        if (CImageProcessor::ToGray(image, errorMsg)) 
-        {
-            // º¯È¯ ¼º°ø -> UI ¾÷µ¥ÀÌÆ® °¡´É
-        }
+        m_model.SetImage(image); // ğŸ”¹ Modelì— ì´ë¯¸ì§€ ì €ì¥
+        return true;
     }
     catch (const std::exception& e) 
     {
-        errorMsg = "Exception in ConvertToGray: " + std::string(e.what());
-    }
-    catch (...) 
-    {
-        errorMsg = "Unknown error occurred in ConvertToGray.";
+        errorMsg = "Exception in LoadImage: " + std::string(e.what());
+        return false;
     }
 }
 
-// ÄÃ·¯ º¯È¯ (¿¹¿Ü Ã³¸® Ãß°¡)
-void CImageViewModel::ConvertToColor(std::string& errorMsg) {
+// ì´ë¯¸ì§€ ì €ì¥
+bool CImageViewModel::SaveImage(const std::string& filePath, std::string& errorMsg) 
+{
     try 
     {
-        auto image = std::const_pointer_cast<cv::Mat>(m_model.GetImage());
-
+        std::shared_ptr<const cv::Mat> image = m_model.GetImage();
         if (!image || image->empty()) 
         {
-            errorMsg = "Error: Image is empty or not loaded.";
-            return;
+            errorMsg = "No image data to save.";
+            return false;
         }
-        if (CImageProcessor::ToColor(image, errorMsg)) 
+
+        if (!cv::imwrite(filePath, *image)) 
         {
-            // º¯È¯ ¼º°ø -> UI ¾÷µ¥ÀÌÆ® °¡´É
+            errorMsg = "Failed to save image.";
+            return false;
         }
+        return true;
     }
     catch (const std::exception& e) 
     {
-        errorMsg = "Exception in ConvertToColor: " + std::string(e.what());
+        errorMsg = "Exception in SaveImage: " + std::string(e.what());
+        return false;
     }
-    catch (...) 
+}
+
+// í‘ë°± ë³€í™˜
+void CImageViewModel::ConvertToGray(std::string& errorMsg) 
+{
+    std::shared_ptr<cv::Mat> image = std::const_pointer_cast<cv::Mat>(m_model.GetImage());
+    if (CImageProcessor::ToGray(image, errorMsg)) 
     {
-        errorMsg = "Unknown error occurred in ConvertToColor.";
+        // ë³€í™˜ ì„±ê³µ -> UI ì—…ë°ì´íŠ¸ ê°€ëŠ¥
     }
+}
+
+// ì»¬ëŸ¬ ë³€í™˜
+void CImageViewModel::ConvertToColor(std::string& errorMsg) 
+{
+    std::shared_ptr<cv::Mat> image = std::const_pointer_cast<cv::Mat>(m_model.GetImage());
+    if (CImageProcessor::ToColor(image, errorMsg)) 
+    {
+        // ë³€í™˜ ì„±ê³µ -> UI ì—…ë°ì´íŠ¸ ê°€ëŠ¥
+    }
+}
+
+// Model ë°ì´í„° ê°€ì ¸ì˜¤ê¸° (ì½ê¸° ì „ìš©)
+std::shared_ptr<const cv::Mat> CImageViewModel::GetImage() const 
+{
+    return m_model.GetImage();
 }

@@ -1,8 +1,4 @@
-
-// ObjectTrackingDlg.cpp : implementation file
-//
-
-#include "pch.h"
+Ôªø#include "pch.h"
 #include "framework.h"
 #include "ObjectTracking.h"
 #include "ObjectTrackingDlg.h"
@@ -12,48 +8,14 @@
 #define new DEBUG_NEW
 #endif
 
-
-// CAboutDlg dialog used for App About
-
-class CAboutDlg : public CDialogEx
-{
-public:
-	CAboutDlg();
-
-// Dialog Data
-#ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_ABOUTBOX };
-#endif
-
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
-// Implementation
-protected:
-	DECLARE_MESSAGE_MAP()
-};
-
-CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
-{
-}
-
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
-{
-	CDialogEx::DoDataExchange(pDX);
-}
-
-BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
-END_MESSAGE_MAP()
-
-
 // CObjectTrackingDlg dialog
-
-
 
 CObjectTrackingDlg::CObjectTrackingDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_OBJECTTRACKING_DIALOG, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	m_pBitmapInfo = nullptr;
+	m_hBitmap = nullptr;
 }
 
 void CObjectTrackingDlg::DoDataExchange(CDataExchange* pDX)
@@ -61,88 +23,103 @@ void CObjectTrackingDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 }
 
+BEGIN_MESSAGE_MAP(CObjectTrackingDlg, CDialogEx)
+	ON_BN_CLICKED(IDC_BTN_IMG_LOAD, &CObjectTrackingDlg::OnBnClickedBtnImgLoad)
+	ON_BN_CLICKED(IDC_BTN_IMG_SAVE, &CObjectTrackingDlg::OnBnClickedBtnImgSave)
+	ON_WM_PAINT()
+	ON_WM_DESTROY()
+END_MESSAGE_MAP()
+
+// CObjectTrackingDlg message handlers
+
+BOOL CObjectTrackingDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+	SetIcon(m_hIcon, TRUE);
+	SetIcon(m_hIcon, FALSE);
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	return TRUE;
+}
+
+// Bitmap Ï†ïÎ≥¥ ÏÉùÏÑ±
 void CObjectTrackingDlg::CreateBitmapInfo(int nWidth, int nHeight, int nBpp)
 {
-	if (m_pBitmapInfo != nullptr)
-	{
-		delete[] reinterpret_cast<BYTE*>(m_pBitmapInfo);
-		m_pBitmapInfo = NULL;
+	try {
+		ReleaseBitmap(); // Í∏∞Ï°¥ Bitmap Ìï¥Ï†ú
+
+		if (nBpp == 8)
+			m_pBitmapInfo = (BITMAPINFO*) new BYTE[sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)];
+		else
+			m_pBitmapInfo = (BITMAPINFO*) new BYTE[sizeof(BITMAPINFO)];
+
+		m_pBitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+		m_pBitmapInfo->bmiHeader.biPlanes = 1;
+		m_pBitmapInfo->bmiHeader.biBitCount = nBpp;
+		m_pBitmapInfo->bmiHeader.biCompression = BI_RGB;
+		m_pBitmapInfo->bmiHeader.biWidth = nWidth;
+		m_pBitmapInfo->bmiHeader.biHeight = -nHeight; // ÏÉÅÌïò Î∞òÏ†Ñ Î∞©ÏßÄ
 	}
-
-	if (nBpp == 8)
-		m_pBitmapInfo = (BITMAPINFO*) new BYTE[sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)];
-	else // 24 or 32bit
-		m_pBitmapInfo = (BITMAPINFO*) new BYTE[sizeof(BITMAPINFO)];
-
-	m_pBitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	m_pBitmapInfo->bmiHeader.biPlanes = 1;
-	m_pBitmapInfo->bmiHeader.biBitCount = nBpp;
-	m_pBitmapInfo->bmiHeader.biCompression = BI_RGB;
-	m_pBitmapInfo->bmiHeader.biSizeImage = 0;
-	m_pBitmapInfo->bmiHeader.biXPelsPerMeter = 0;
-	m_pBitmapInfo->bmiHeader.biYPelsPerMeter = 0;
-	m_pBitmapInfo->bmiHeader.biClrUsed = 0;
-	m_pBitmapInfo->bmiHeader.biClrImportant = 0;
-
-	if (nBpp == 8)
-	{
-		for (int i = 0; i < 256; i++)
-		{
-			m_pBitmapInfo->bmiColors[i].rgbBlue = (BYTE)i;
-			m_pBitmapInfo->bmiColors[i].rgbGreen = (BYTE)i;
-			m_pBitmapInfo->bmiColors[i].rgbRed = (BYTE)i;
-			m_pBitmapInfo->bmiColors[i].rgbReserved = 0;
-		}
+	catch (const std::exception& e) {
+		AfxMessageBox(CString("Exception in CreateBitmapInfo: ") + CString(e.what()), MB_ICONERROR);
 	}
-
-	m_pBitmapInfo->bmiHeader.biWidth = nWidth;
-	m_pBitmapInfo->bmiHeader.biHeight = -nHeight;
 }
 
+// Picture ControlÏóê Ïù¥ÎØ∏ÏßÄ Í∑∏Î¶¨Í∏∞
 void CObjectTrackingDlg::DrawImage()
 {
-	CClientDC dc(GetDlgItem(IDC_PICTURE_VIEW));
+	if (!m_pBitmapInfo || m_viewModel.GetImage()->empty()) return;
 
-	CRect rect;
-	GetDlgItem(IDC_PICTURE_VIEW)->GetClientRect(&rect);
+	try {
+		CClientDC dc(GetDlgItem(IDC_PICTURE_VIEW));
 
-	SetStretchBltMode(dc.GetSafeHdc(), COLORONCOLOR);
-	StretchDIBits(dc.GetSafeHdc(), 0, 0, rect.Width(), rect.Height(), 0, 0, m_matImage.cols, m_matImage.rows, m_matImage.data, m_pBitmapInfo, DIB_RGB_COLORS, SRCCOPY);
+		CRect rect;
+		GetDlgItem(IDC_PICTURE_VIEW)->GetClientRect(&rect);
+
+		SetStretchBltMode(dc.GetSafeHdc(), COLORONCOLOR);
+		StretchDIBits(dc.GetSafeHdc(), 0, 0, rect.Width(), rect.Height(),
+			0, 0, m_viewModel.GetImage()->cols, m_viewModel.GetImage()->rows,
+			m_viewModel.GetImage()->data, m_pBitmapInfo, DIB_RGB_COLORS, SRCCOPY);
+	}
+	catch (const std::exception& e) {
+		AfxMessageBox(CString("Exception in DrawImage: ") + CString(e.what()), MB_ICONERROR);
+	}
 }
 
+// Bitmap Ìï¥Ï†ú
 void CObjectTrackingDlg::ReleaseBitmap()
 {
-	// ±‚¡∏ Bitmap «ÿ¡¶
+	if (m_pBitmapInfo) {
+		delete[] reinterpret_cast<BYTE*>(m_pBitmapInfo);
+		m_pBitmapInfo = nullptr;
+	}
+
 	if (m_hBitmap) {
 		DeleteObject(m_hBitmap);
 		m_hBitmap = nullptr;
 	}
 }
 
+// OpenCV Mat ‚Üí HBITMAP Î≥ÄÌôò
 HBITMAP CObjectTrackingDlg::MatToHBITMAP(cv::Mat& matImage)
 {
 	if (matImage.empty()) return nullptr;
 
 	cv::Mat tempImage;
 	if (matImage.channels() == 1) {
-		// »ÊπÈ ¿ÃπÃ¡ˆ∏¶ BGR∑Œ ∫Ø»Ø
 		cv::cvtColor(matImage, tempImage, cv::COLOR_GRAY2BGR);
 	}
 	else {
 		tempImage = matImage.clone();
 	}
 
-	// Bitmap ¡§∫∏ º≥¡§
-	BITMAPINFO bmpInfo;
-	memset(&bmpInfo, 0, sizeof(BITMAPINFO));
+	BITMAPINFO bmpInfo = {};
 	bmpInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	bmpInfo.bmiHeader.biWidth = tempImage.cols;
-	bmpInfo.bmiHeader.biHeight = -tempImage.rows; // ªÛ«œ π›¿¸ πÊ¡ˆ
+	bmpInfo.bmiHeader.biHeight = -tempImage.rows;
 	bmpInfo.bmiHeader.biPlanes = 1;
 	bmpInfo.bmiHeader.biBitCount = 24;
 	bmpInfo.bmiHeader.biCompression = BI_RGB;
 
-	// HBITMAP ª˝º∫
 	HDC hDC = ::GetDC(NULL);
 	void* pBits = nullptr;
 	HBITMAP hBitmap = CreateDIBSection(hDC, &bmpInfo, DIB_RGB_COLORS, &pBits, NULL, 0);
@@ -153,163 +130,67 @@ HBITMAP CObjectTrackingDlg::MatToHBITMAP(cv::Mat& matImage)
 	return hBitmap;
 }
 
-BEGIN_MESSAGE_MAP(CObjectTrackingDlg, CDialogEx)
-	ON_WM_SYSCOMMAND()
-	ON_WM_PAINT()
-	ON_WM_QUERYDRAGICON()
-	ON_WM_GETMINMAXINFO()
-	ON_BN_CLICKED(IDC_BTN_IMG_LOAD, &CObjectTrackingDlg::OnBnClickedBtnImgLoad)
-	ON_BN_CLICKED(IDC_BTN_IMG_SAVE, &CObjectTrackingDlg::OnBnClickedBtnImgSave)
-	ON_WM_DESTROY()
-END_MESSAGE_MAP()
-
-
-// CObjectTrackingDlg message handlers
-
-BOOL CObjectTrackingDlg::OnInitDialog()
-{
-	CDialogEx::OnInitDialog();
-
-	// Add "About..." menu item to system menu.
-
-	// IDM_ABOUTBOX must be in the system command range.
-	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
-	ASSERT(IDM_ABOUTBOX < 0xF000);
-
-	CMenu* pSysMenu = GetSystemMenu(FALSE);
-	if (pSysMenu != nullptr)
-	{
-		BOOL bNameValid;
-		CString strAboutMenu;
-		bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
-		ASSERT(bNameValid);
-		if (!strAboutMenu.IsEmpty())
-		{
-			pSysMenu->AppendMenu(MF_SEPARATOR);
-			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
-		}
-	}
-
-	// Set the icon for this dialog.  The framework does this automatically
-	//  when the application's main window is not a dialog
-	SetIcon(m_hIcon, TRUE);			// Set big icon
-	SetIcon(m_hIcon, FALSE);		// Set small icon
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-
-	return TRUE;  // return TRUE  unless you set the focus to a control
-}
-
-void CObjectTrackingDlg::OnSysCommand(UINT nID, LPARAM lParam)
-{
-	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
-	{
-		CAboutDlg dlgAbout;
-		dlgAbout.DoModal();
-	}
-	else
-	{
-		CDialogEx::OnSysCommand(nID, lParam);
-	}
-}
-
-// If you add a minimize button to your dialog, you will need the code below
-//  to draw the icon.  For MFC applications using the document/view model,
-//  this is automatically done for you by the framework.
-
-void CObjectTrackingDlg::OnPaint()
-{
-	DrawImage();
-	CDialogEx::OnPaint();	
-}
-
-// The system calls this function to obtain the cursor to display while the user drags
-//  the minimized window.
-HCURSOR CObjectTrackingDlg::OnQueryDragIcon()
-{
-	return static_cast<HCURSOR>(m_hIcon);
-}
-
-
-void CObjectTrackingDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
-{
-	// TODO: Add your message handler code here and/or call default
-
-	lpMMI->ptMinTrackSize = CPoint(1920, 1080);
-	//lpMMI->ptMaxTrackSize = CPoint(1400, 1000);
-
-	CDialogEx::OnGetMinMaxInfo(lpMMI);
-}
-
-
 void CObjectTrackingDlg::OnBnClickedBtnImgLoad()
 {
 	CFileDialog fileDlg(TRUE, NULL, NULL, OFN_READONLY,
 		_T("image file(*.jpg;*.bmp;*.png;)|*.jpg;*.bmp;*.png;|All Files(*.*)|*.*||"));
 
-	if (fileDlg.DoModal() == IDOK) 
+	if (fileDlg.DoModal() == IDOK)
 	{
 		CString path = fileDlg.GetPathName();
-		std::string strPath(CT2A(path, CP_UTF8));
+		std::string strPath(CT2A(path, CP_ACP));
 
 		std::string errorMsg;
-		if (m_viewModel.LoadImage(strPath, errorMsg)) 
+		if (m_viewModel.LoadImage(strPath, errorMsg))
 		{
-			cv::Mat image = m_viewModel.GetImage();
-			CreateBitmapInfo(image.cols, image.rows, image.channels() * 8);
-			DrawImage();
-			AfxMessageBox(_T("Image loaded successfully!"));
+			std::shared_ptr<const cv::Mat> image = m_viewModel.GetImage(); // üîπ Model Îç∞Ïù¥ÌÑ∞ Í∞ÄÏ†∏Ïò§Í∏∞
+
+			if (image && !image->empty()) 
+			{
+				CreateBitmapInfo(image->cols, image->rows, image->channels() * 8);
+				DrawImage();
+				AfxMessageBox(_T("Image loaded successfully!"));
+			}
 		}
-		else 
+		else
 		{
-			CString errMsg(errorMsg.c_str());
-			AfxMessageBox(_T("Failed to load image!\n") + errMsg, MB_ICONERROR);
+			AfxMessageBox(CString("Failed to load image!\n") + CString(errorMsg.c_str()), MB_ICONERROR);
 		}
 	}
 }
 
 void CObjectTrackingDlg::OnBnClickedBtnImgSave()
 {
-	if (m_viewModel.GetImage().empty()) 
+	if (m_viewModel.GetImage()->empty())
 	{
-		AfxMessageBox(_T("¿ÃπÃ¡ˆ∏¶ ∫“∑Øø¿¡ˆ ∏¯«ﬂΩ¿¥œ¥Ÿ."), MB_ICONERROR);
+		AfxMessageBox(_T("Ïù¥ÎØ∏ÏßÄÎ•º Î∂àÎü¨Ïò§ÏßÄ Î™ªÌñàÏäµÎãàÎã§."), MB_ICONERROR);
 		return;
 	}
 
 	CFileDialog fileDlg(FALSE, _T("jpg"), NULL, OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST,
 		_T("image file(*.jpg;*.bmp;*.png;)|*.jpg;*.bmp;*.png;|All Files(*.*)|*.*||"));
 
-	if (fileDlg.DoModal() == IDOK) 
+	if (fileDlg.DoModal() == IDOK)
 	{
 		CString path = fileDlg.GetPathName();
 		std::string strPath(CT2A(path, CP_UTF8));
 
 		std::string errorMsg;
-		if (m_viewModel.SaveImage(strPath, errorMsg)) 
+		if (m_viewModel.SaveImage(strPath, errorMsg))
 		{
 			AfxMessageBox(_T("Image saved successfully!"));
 		}
-		else 
+		else
 		{
-			CString errMsg(errorMsg.c_str());
-			AfxMessageBox(_T("Failed to save image!\n") + errMsg, MB_ICONERROR);
+			AfxMessageBox(CString("Failed to save image!\n") + CString(errorMsg.c_str()), MB_ICONERROR);
 		}
 	}
 }
 
+
+// Ï¢ÖÎ£å Ïãú Î©îÎ™®Î¶¨ Ìï¥Ï†ú
 void CObjectTrackingDlg::OnDestroy()
 {
-	// ¡æ∑· ∏ﬁºº¡ˆ
 	CDialogEx::OnDestroy();
-
-	//// ∏ﬁ∏∏Æ¥©ºˆ «ÿ∞·
-	
-	//1. Open CV¥¬ ¿⁄µø¿∏∑Œ «ÿ¡¶ ∞°¥…«‘.
-	//m_matImage.release();
-	 
-	//2. new∑Œ µø¿˚«“¥Á «—∞Õ¿∫ «¡∑Œ±◊∑• ≥°≥Ø∂ß µø¿˚«“¥Á «ÿ¡¶.
-	if (m_pBitmapInfo != nullptr)
-	{
-		delete[] reinterpret_cast<BYTE*>(m_pBitmapInfo);
-		m_pBitmapInfo = nullptr;
-	}
+	ReleaseBitmap();
 }
