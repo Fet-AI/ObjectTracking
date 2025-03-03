@@ -54,6 +54,9 @@
     <ClInclude Include="ImageLibrary.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="ImageProcessor.h">
+      <Filter>ViewModel</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ObjectTracking.cpp">
@@ -69,6 +72,9 @@
       <Filter>Model</Filter>
     </ClCompile>
     <ClCompile Include="ImageViewModel.cpp">
+      <Filter>ViewModel</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageProcessor.cpp">
       <Filter>ViewModel</Filter>
     </ClCompile>
   </ItemGroup>

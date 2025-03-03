@@ -197,6 +197,7 @@
     <ClInclude Include="ImageLibrary.h" />
     <ClInclude Include="ImageModel.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="ImageProcessor.h" />
     <ClInclude Include="ImageViewModel.h" />
     <ClInclude Include="MemoryLeak.h" />
     <ClInclude Include="ObjectTracking.h" />
@@ -207,6 +208,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ImageModel.cpp" />
+    <ClCompile Include="ImageProcessor.cpp" />
     <ClCompile Include="ImageViewModel.cpp" />
     <ClCompile Include="ObjectTracking.cpp" />
     <ClCompile Include="ObjectTrackingDlg.cpp" />

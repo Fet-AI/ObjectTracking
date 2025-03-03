@@ -110,6 +110,49 @@ void CObjectTrackingDlg::DrawImage()
 	StretchDIBits(dc.GetSafeHdc(), 0, 0, rect.Width(), rect.Height(), 0, 0, m_matImage.cols, m_matImage.rows, m_matImage.data, m_pBitmapInfo, DIB_RGB_COLORS, SRCCOPY);
 }
 
+void CObjectTrackingDlg::ReleaseBitmap()
+{
+	// 기존 Bitmap 해제
+	if (m_hBitmap) {
+		DeleteObject(m_hBitmap);
+		m_hBitmap = nullptr;
+	}
+}
+
+HBITMAP CObjectTrackingDlg::MatToHBITMAP(cv::Mat& matImage)
+{
+	if (matImage.empty()) return nullptr;
+
+	cv::Mat tempImage;
+	if (matImage.channels() == 1) {
+		// 흑백 이미지를 BGR로 변환
+		cv::cvtColor(matImage, tempImage, cv::COLOR_GRAY2BGR);
+	}
+	else {
+		tempImage = matImage.clone();
+	}
+
+	// Bitmap 정보 설정
+	BITMAPINFO bmpInfo;
+	memset(&bmpInfo, 0, sizeof(BITMAPINFO));
+	bmpInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmpInfo.bmiHeader.biWidth = tempImage.cols;
+	bmpInfo.bmiHeader.biHeight = -tempImage.rows; // 상하 반전 방지
+	bmpInfo.bmiHeader.biPlanes = 1;
+	bmpInfo.bmiHeader.biBitCount = 24;
+	bmpInfo.bmiHeader.biCompression = BI_RGB;
+
+	// HBITMAP 생성
+	HDC hDC = ::GetDC(NULL);
+	void* pBits = nullptr;
+	HBITMAP hBitmap = CreateDIBSection(hDC, &bmpInfo, DIB_RGB_COLORS, &pBits, NULL, 0);
+	if (hBitmap) {
+		memcpy(pBits, tempImage.data, tempImage.total() * tempImage.elemSize());
+	}
+	::ReleaseDC(NULL, hDC);
+	return hBitmap;
+}
+
 BEGIN_MESSAGE_MAP(CObjectTrackingDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
@@ -185,7 +228,6 @@ HCURSOR CObjectTrackingDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
 }
-
 
 
 void CObjectTrackingDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)

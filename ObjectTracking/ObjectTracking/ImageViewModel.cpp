@@ -1,19 +1,57 @@
-#include "pch.h"
 #include "ImageViewModel.h"
-// Model에 로드 요청
-bool CImageViewModel::LoadImage(const std::string& filePath, std::string& errorMsg) 
+
+// 생성자
+CImageViewModel::CImageViewModel() {}
+
+// 흑백 변환 (예외 처리 추가)
+void CImageViewModel::ConvertToGray(std::string& errorMsg) 
 {
-    return m_model.LoadImage(filePath, errorMsg); 
+    try 
+    {
+        auto image = std::const_pointer_cast<cv::Mat>(m_model.GetImage());
+        if (!image || image->empty()) 
+        {
+            errorMsg = "Error: Image is empty or not loaded.";
+            return;
+        }
+
+        if (CImageProcessor::ToGray(image, errorMsg)) 
+        {
+            // 변환 성공 -> UI 업데이트 가능
+        }
+    }
+    catch (const std::exception& e) 
+    {
+        errorMsg = "Exception in ConvertToGray: " + std::string(e.what());
+    }
+    catch (...) 
+    {
+        errorMsg = "Unknown error occurred in ConvertToGray.";
+    }
 }
 
-// Model에 저장 요청
-bool CImageViewModel::SaveImage(const std::string& filePath, std::string& errorMsg) 
-{
-    return m_model.SaveImage(filePath, errorMsg); 
-}
+// 컬러 변환 (예외 처리 추가)
+void CImageViewModel::ConvertToColor(std::string& errorMsg) {
+    try 
+    {
+        auto image = std::const_pointer_cast<cv::Mat>(m_model.GetImage());
 
-// Model의 이미지 데이터를 제공
-cv::Mat CImageViewModel::GetImage() const 
-{
-    return m_model.m_image; 
+        if (!image || image->empty()) 
+        {
+            errorMsg = "Error: Image is empty or not loaded.";
+            return;
+        }
+        if (CImageProcessor::ToColor(image, errorMsg)) 
+        {
+            // 변환 성공 -> UI 업데이트 가능
+        }
+    }
+    catch (const std::exception& e) 
+    {
+        errorMsg = "Exception in ConvertToColor: " + std::string(e.what());
+    }
+    catch (...) 
+    {
+        errorMsg = "Unknown error occurred in ConvertToColor.";
+    }
 }
