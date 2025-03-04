@@ -22,4 +22,5 @@ public:
 
     // Model 데이터 가져오기
     std::shared_ptr<const cv::Mat> GetImage() const;
+    void SetImage(const cv::Mat& image);
 };

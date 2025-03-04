@@ -14,7 +14,8 @@
 #include <opencv2/opencv.hpp>
 #include <memory>
 
-class CImageModel {
+class CImageModel 
+{
 private:
     std::shared_ptr<cv::Mat> m_image; // OpenCV 이미지 데이터 (private)
 
