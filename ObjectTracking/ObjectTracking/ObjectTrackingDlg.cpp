@@ -47,17 +47,30 @@ BOOL CObjectTrackingDlg::OnInitDialog()
 // Bitmap 정보 생성
 void CObjectTrackingDlg::CreateBitmapInfo(int nWidth, int nHeight, int nBpp)
 {
-	try 
-	{
+	try {
 		ReleaseBitmap(); // 기존 Bitmap 해제
 
 		if (nBpp == 8)
-			m_pBitmapInfo = (BITMAPINFO*) new BYTE[sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)];
-		else
-			m_pBitmapInfo = (BITMAPINFO*) new BYTE[sizeof(BITMAPINFO)];
-
-		if (!m_pBitmapInfo) 
 		{
+			// 8-bit grayscale을 위한 색상 테이블 포함
+			m_pBitmapInfo = (BITMAPINFO*) new BYTE[sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD)];
+
+			// 색상 테이블 초기화 (0~255의 Grayscale 색상값 설정)
+			RGBQUAD* colorTable = (RGBQUAD*)((BYTE*)m_pBitmapInfo + sizeof(BITMAPINFOHEADER));
+			for (int i = 0; i < 256; i++)
+			{
+				colorTable[i].rgbBlue = i;
+				colorTable[i].rgbGreen = i;
+				colorTable[i].rgbRed = i;
+				colorTable[i].rgbReserved = 0;
+			}
+		}
+		else
+		{
+			m_pBitmapInfo = (BITMAPINFO*) new BYTE[sizeof(BITMAPINFO)];
+		}
+
+		if (!m_pBitmapInfo) {
 			AfxMessageBox(_T("Error: Failed to allocate memory for BITMAPINFO"), MB_ICONERROR);
 			return;
 		}
@@ -68,49 +81,58 @@ void CObjectTrackingDlg::CreateBitmapInfo(int nWidth, int nHeight, int nBpp)
 		m_pBitmapInfo->bmiHeader.biCompression = BI_RGB;
 		m_pBitmapInfo->bmiHeader.biWidth = nWidth;
 		m_pBitmapInfo->bmiHeader.biHeight = -nHeight; // 상하 반전 방지
-
-		TRACE("CreateBitmapInfo - Width: %d, Height: %d, BitCount: %d\n", nWidth, nHeight, nBpp);
 	}
-	catch (const std::exception& e) 
-	{
+	catch (const std::exception& e) {
 		AfxMessageBox(CString("Exception in CreateBitmapInfo: ") + CString(e.what()), MB_ICONERROR);
 	}
 }
 
 
 
+
 // Picture Control에 이미지 그리기
 void CObjectTrackingDlg::DrawImage()
 {
-	if (!m_pBitmapInfo) 
-	{
+	if (!m_pBitmapInfo) {
 		AfxMessageBox(_T("Error: m_pBitmapInfo is NULL!"), MB_ICONERROR);
 		return;
 	}
 
 	std::shared_ptr<const cv::Mat> image = m_viewModel.GetImage();
-	if (!image || image->empty()) 
-	{
+	if (!image || image->empty()) {
 		AfxMessageBox(_T("Error: Image is empty or not loaded!"), MB_ICONERROR);
 		return;
 	}
-	try 
-	{
+
+	try {
 		CClientDC dc(GetDlgItem(IDC_PICTURE_VIEW));
+
+		HDC hdc = dc.GetSafeHdc();
+		if (!hdc) {
+			AfxMessageBox(_T("Error: HDC is NULL"), MB_ICONERROR);
+			return;
+		}
 
 		CRect rect;
 		GetDlgItem(IDC_PICTURE_VIEW)->GetClientRect(&rect);
 
-		SetStretchBltMode(dc.GetSafeHdc(), COLORONCOLOR);
-		StretchDIBits(dc.GetSafeHdc(), 0, 0, rect.Width(), rect.Height(),
+		// 🔹 8-bit grayscale이면 DIB_PAL_COLORS 사용
+		UINT usage = (m_pBitmapInfo->bmiHeader.biBitCount == 8) ? DIB_PAL_COLORS : DIB_RGB_COLORS;
+
+		int result = StretchDIBits(hdc, 0, 0, rect.Width(), rect.Height(),
 			0, 0, image->cols, image->rows,
-			image->data, m_pBitmapInfo, DIB_RGB_COLORS, SRCCOPY);
+			image->data, m_pBitmapInfo, usage, SRCCOPY);
+
+		if (result == 0) {
+			AfxMessageBox(_T("Error: StretchDIBits failed"), MB_ICONERROR);
+		}
 	}
-	catch (const std::exception& e) 
-	{
+	catch (const std::exception& e) {
 		AfxMessageBox(CString("Exception in DrawImage: ") + CString(e.what()), MB_ICONERROR);
 	}
 }
+
+
 
 
 // Bitmap 해제
@@ -133,11 +155,13 @@ HBITMAP CObjectTrackingDlg::MatToHBITMAP(cv::Mat& matImage)
 	if (matImage.empty()) return nullptr;
 
 	cv::Mat tempImage;
-	if (matImage.channels() == 1) {
+	if (matImage.channels() == 1) 
+	{
 		// 🔹 8-bit grayscale → 24-bit BGR 변환
 		cv::cvtColor(matImage, tempImage, cv::COLOR_GRAY2BGR);
 	}
-	else {
+	else 
+	{
 		tempImage = matImage.clone();
 	}
 
@@ -152,7 +176,9 @@ HBITMAP CObjectTrackingDlg::MatToHBITMAP(cv::Mat& matImage)
 	HDC hDC = ::GetDC(NULL);
 	void* pBits = nullptr;
 	HBITMAP hBitmap = CreateDIBSection(hDC, &bmpInfo, DIB_RGB_COLORS, &pBits, NULL, 0);
-	if (hBitmap) {
+
+	if (hBitmap) 
+	{
 		memcpy(pBits, tempImage.data, tempImage.total() * tempImage.elemSize());
 	}
 	::ReleaseDC(NULL, hDC);
