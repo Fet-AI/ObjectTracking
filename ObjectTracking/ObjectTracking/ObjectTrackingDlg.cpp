@@ -56,7 +56,6 @@ void CObjectTrackingDlg::CreateBitmapInfo(int nWidth, int nHeight, int nBpp)
 		else
 			m_pBitmapInfo = (BITMAPINFO*) new BYTE[sizeof(BITMAPINFO)];
 
-		// 🚨 올바르게 할당되었는지 확인
 		if (!m_pBitmapInfo) 
 		{
 			AfxMessageBox(_T("Error: Failed to allocate memory for BITMAPINFO"), MB_ICONERROR);
@@ -69,12 +68,15 @@ void CObjectTrackingDlg::CreateBitmapInfo(int nWidth, int nHeight, int nBpp)
 		m_pBitmapInfo->bmiHeader.biCompression = BI_RGB;
 		m_pBitmapInfo->bmiHeader.biWidth = nWidth;
 		m_pBitmapInfo->bmiHeader.biHeight = -nHeight; // 상하 반전 방지
+
+		TRACE("CreateBitmapInfo - Width: %d, Height: %d, BitCount: %d\n", nWidth, nHeight, nBpp);
 	}
 	catch (const std::exception& e) 
 	{
 		AfxMessageBox(CString("Exception in CreateBitmapInfo: ") + CString(e.what()), MB_ICONERROR);
 	}
 }
+
 
 
 // Picture Control에 이미지 그리기
