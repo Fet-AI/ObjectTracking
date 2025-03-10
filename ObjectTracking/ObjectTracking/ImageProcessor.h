@@ -6,7 +6,8 @@
 class CImageProcessor 
 {
 public:
+    static bool ToReSize(std::shared_ptr<cv::Mat> image, std::string& errorMsg);
     static bool ToGray(std::shared_ptr<cv::Mat> image, std::string& errorMsg);
     static bool ToColor(std::shared_ptr<cv::Mat> image, std::string& errorMsg);
-    static bool ToBlur_Gaussian(std::shared_ptr<cv::Mat> image,cv::Mat gray, cv::Size size,int nStandardDeviation ,std::string& errorMsg);
+    bool CImageProcessor::ToBlur_Gaussian(std::shared_ptr<cv::Mat> image, cv::Size size, int nStandardDeviation, cv::Rect roi, std::string& errorMsg);
 };
